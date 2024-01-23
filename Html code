@@ -1,0 +1,126 @@
+// html code named "index.html"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ATM Machine</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="atm-container">
+        <div class="atm-screen">
+            <div class="display">
+                <h1>ATM Machine</h1>
+                <p id="message">Enter your PIN and capture your face</p>
+            </div>
+            <div class="input-area">
+                <label for="pin">PIN:</label>
+                <input type="password" id="pin" maxlength="4" />
+                <input type="file" id="faceCapture" accept="image/*" capture="user" />
+            </div>
+            <button onclick="authenticate()">Authenticate</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+//css code named "style.css"
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+}
+
+.atm-container {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    width: 400px;
+}
+
+.atm-screen {
+    padding: 20px;
+}
+
+.display {
+    text-align: center;
+}
+
+.input-area {
+    margin-top: 20px;
+    text-align: center;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+//js code named as "script.js"
+function authenticate() {
+    const pin = document.getElementById('pin').value;
+    const faceCaptureInput = document.getElementById('faceCapture');
+
+    if (!pin || !faceCaptureInput.files[0]) {
+        setMessage('Please enter your PIN and capture your face.');
+        return;
+    }
+
+    const faceCapture = await getBase64(faceCaptureInput.files[0]);
+
+    const response = await fetch('/authenticate', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            pin: pin,
+            image: faceCapture,
+        }),
+    });
+
+    const result = await response.json();
+    setMessage(result.message);
+}
+
+function setMessage(message) {
+    document.getElementById('message').innerText = message;
+}
+
+function getBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = error => reject(error);
+    });
+}
+
